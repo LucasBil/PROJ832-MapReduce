@@ -234,7 +234,7 @@ public class MasterNode {
                 System.out.println("[Reducer-" + i + "] aucun fichier résultat.");
                 continue;
             }
-            List<String> lines = Files.readAllLines(resultFile);
+            List<String> lines = Files.readAllLines(resultFile, java.nio.charset.StandardCharsets.UTF_8);
             for (String line : lines) {
                 String[] parts = line.trim().split("\\s+");
                 if (parts.length == 2) {

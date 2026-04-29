@@ -8,7 +8,12 @@ FILE_PATH=$1
 echo "[Mapper-$MAPPER_ID] Traitement du fichier : $FILE_PATH"
 
 # Compter les occurrences de chaque mot (insensible à la casse, sans ponctuation)
-cat "$FILE_PATH" | tr '[:upper:]' '[:lower:]' | tr 'ÉÈÊËÀÂÄÔÖÛÜÙÎÏÇ' 'éèêëàâäôöûüùîïç' | tr -cs 'a-z0-9éèêëàâäôöûüùîïç' '\n' | grep -v '^$' | sort | uniq -c | while read count word; do
+cat "$FILE_PATH" \
+    | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZÉÈÊËÀÂÄÔÖÛÜÙÎÏÇ/abcdefghijklmnopqrstuvwxyzéèêëàâäôöûüùîïç/' \
+    | tr -cs 'a-z0-9éèêëàâäôöûüùîïç' '\n' \
+    | grep -v '^$' \
+    | sort | uniq -c \
+    | while read count word; do
     # Déterminer le reducer cible via hash du mot
     hash=$(echo -n "$word" | cksum | cut -d' ' -f1)
     reducer_id=$((hash % NB_REDUCERS))

@@ -3,10 +3,22 @@ echo ==============================================
 echo MapReduce Visualizer
 echo ==============================================
 
-echo [1/2] Starting Node.js Backend Server on port 3001...
+if not exist "target\classes\org\example\MasterNode.class" (
+    echo [0/3] Compiling Java MapReduce Engine...
+    call mvn clean compile dependency:copy-dependencies
+)
+
+if not exist "web-ui\node_modules" (
+    echo [1/3] Installing Web Dependencies...
+    cd web-ui
+    call npm install
+    cd ..
+)
+
+echo [2/3] Starting Node.js Backend Server on port 3001...
 start cmd /k "cd web-ui && node backend/server.js"
 
-echo [2/2] Starting Vite React Frontend...
+echo [3/3] Starting Vite React Frontend...
 start cmd /k "cd web-ui && npm run dev -- --open"
 
 echo.

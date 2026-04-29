@@ -3,12 +3,12 @@
 MAPPER_ID=$1
 NB_REDUCERS=$2
 shift 2
-INPUT="$@"
+FILE_PATH=$1
 
-echo "[Mapper-$MAPPER_ID] Traitement : $INPUT"
+echo "[Mapper-$MAPPER_ID] Traitement du fichier : $FILE_PATH"
 
-# Compter les occurrences de chaque mot
-echo "$INPUT" | tr ' ' '\n' | sort | uniq -c | while read count word; do
+# Compter les occurrences de chaque mot (sensible à la casse, sans ponctuation)
+cat "$FILE_PATH" | tr -cs 'a-zA-Z0-9éèêëàâäôöûüùîïçÉÈÊËÀÂÄÔÖÛÜÙÎÏÇ' '\n' | grep -v '^$' | sort | uniq -c | while read count word; do
     # Déterminer le reducer cible via hash du mot
     hash=$(echo -n "$word" | cksum | cut -d' ' -f1)
     reducer_id=$((hash % NB_REDUCERS))

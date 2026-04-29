@@ -1,0 +1,6 @@
+target/
+.idea/
+*.iml
+input.txt
+web-ui/uploads/
+web-ui/node_modules/

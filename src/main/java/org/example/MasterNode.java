@@ -128,10 +128,17 @@ public class MasterNode {
     }
 
     private String spawnMapper(int index, int nbReducers, String chunk) {
-        // La commande exécute le script mapper.sh avec les données en argument
+        // Write the chunk to a file to avoid shell escaping issues with huge text, #, quotes, etc.
+        try {
+            Files.writeString(Paths.get(HOST_SHARED_DIR, "input-" + index + ".txt"), chunk);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // La commande exécute le script mapper.sh avec le chemin du fichier en argument
         String cmd = String.format(
-                "sh /shared/mapper.sh %d %d %s",
-                index, nbReducers, chunk.replace("'", "\\'")
+                "sh /shared/mapper.sh %d %d /shared/input-%d.txt",
+                index, nbReducers, index
         );
 
         Bind volumeBind = new Bind(
@@ -291,9 +298,18 @@ public class MasterNode {
                 .filter(p -> !p.isEmpty())
                 .collect(Collectors.toList());
 
+        List<String> chunks = new ArrayList<>();
+        for (int i = 0; i < MasterNode.numMappers; i++) {
+            chunks.add("");
+        }
+        for (int i = 0; i < paragraphs.size(); i++) {
+            int chunkIndex = i % MasterNode.numMappers;
+            chunks.set(chunkIndex, chunks.get(chunkIndex) + " " + paragraphs.get(i));
+        }
+
         MapReduceTask task = new MapReduceTask(
                 "word-count-job-1",
-                paragraphs,
+                chunks,
                 MasterNode.numReducers
         );
 
@@ -303,5 +319,8 @@ public class MasterNode {
         result.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .forEach(e -> System.out.printf("  %-15s : %d%n", e.getKey(), e.getValue()));
+                
+        // Ensure JVM exits immediately so Node.js detects process completion
+        System.exit(0);
     }
 }

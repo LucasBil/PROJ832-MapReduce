@@ -7,10 +7,9 @@ FILE_PATH=$1
 
 echo "[Mapper-$MAPPER_ID] Traitement du fichier : $FILE_PATH"
 
-# Compter les occurrences de chaque mot (insensible à la casse, sans ponctuation)
+# Java a déjà mis le texte en minuscules — on extrait juste les mots
 cat "$FILE_PATH" \
-    | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZÉÈÊËÀÂÄÔÖÛÜÙÎÏÇ/abcdefghijklmnopqrstuvwxyzéèêëàâäôöûüùîïç/' \
-    | tr -cs 'a-z0-9éèêëàâäôöûüùîïç' '\n' \
+    | tr -cs 'a-z0-9' '\n' \
     | grep -v '^$' \
     | sort | uniq -c \
     | while read count word; do

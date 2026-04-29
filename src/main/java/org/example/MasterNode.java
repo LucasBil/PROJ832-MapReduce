@@ -128,9 +128,10 @@ public class MasterNode {
     }
 
     private String spawnMapper(int index, int nbReducers, String chunk) {
-        // Write the chunk to a file to avoid shell escaping issues with huge text, #, quotes, etc.
+        // Lowercase in Java (Unicode-aware) before writing to disk, so Alpine shell tools only deal with plain lowercase text
+        String normalizedChunk = chunk.toLowerCase(java.util.Locale.ROOT);
         try {
-            Files.writeString(Paths.get(HOST_SHARED_DIR, "input-" + index + ".txt"), chunk);
+            Files.writeString(Paths.get(HOST_SHARED_DIR, "input-" + index + ".txt"), normalizedChunk, java.nio.charset.StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -291,7 +292,7 @@ public class MasterNode {
             if (args[i].equals("--input")) MasterNode.inputPath = args[++i];
         }
 
-        String content = Files.readString(Paths.get(MasterNode.inputPath));
+        String content = Files.readString(Paths.get(MasterNode.inputPath), java.nio.charset.StandardCharsets.UTF_8);
         List<String> paragraphs = List.of(content.split("\\R\\s*\\R"))
                 .stream()
                 .map(String::trim)

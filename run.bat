@@ -5,7 +5,7 @@ echo ==============================================
 
 if not exist "target\classes\org\example\MasterNode.class" (
     echo [0/3] Compiling Java MapReduce Engine...
-    call mvn clean compile dependency:copy-dependencies
+    call mvnw.cmd clean compile dependency:copy-dependencies
 )
 
 if not exist "web-ui\node_modules" (

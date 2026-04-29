@@ -101,6 +101,8 @@ function runJavaProcess(jobId) {
   const classPath = `target/classes${cpSeparator}target/dependency/*`;
 
   const args = [
+    '-Dfile.encoding=UTF-8',
+    '-Dstdout.encoding=UTF-8',
     '-cp', classPath,
     'org.example.MasterNode',
     '--mappers', job.mappers,
@@ -155,6 +157,21 @@ function runJavaProcess(jobId) {
   });
 
   javaProcess.on('close', (code) => {
+    // Flush any remaining buffered output that didn't end with a newline
+    if (stdoutBuffer.trim()) {
+      const line = stdoutBuffer.trim();
+      broadcastLog(jobId, 'stdout', line);
+      if (line.includes('SULTAT FINAL')) {
+        resultsMode = true;
+      } else if (resultsMode) {
+        const match = line.match(/^\s*(.+?)\s*:\s*(\d+)\s*$/);
+        if (match) {
+          finalResults.push({ word: match[1].trim(), count: parseInt(match[2], 10) });
+        }
+      }
+      stdoutBuffer = '';
+    }
+
     if (code === 0) {
       broadcastLog(jobId, 'success', 'Job Completed Successfully', finalResults);
     } else {

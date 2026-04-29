@@ -1,0 +1,21 @@
+#!/bin/sh
+# Arguments : $1=index_mapper  $2=nb_reducers  $3=données...
+MAPPER_ID=$1
+NB_REDUCERS=$2
+shift 2
+INPUT="$@"
+
+echo "[Mapper-$MAPPER_ID] Traitement : $INPUT"
+
+# Compter les occurrences de chaque mot
+echo "$INPUT" | tr ' ' '\n' | sort | uniq -c | while read count word; do
+    # Déterminer le reducer cible via hash du mot
+    hash=$(echo -n "$word" | cksum | cut -d' ' -f1)
+    reducer_id=$((hash % NB_REDUCERS))
+    dir="/shared/reducer-$reducer_id"
+    mkdir -p "$dir"
+    echo "$word $count" >> "$dir/mapper-$MAPPER_ID.txt"
+    echo "[Mapper-$MAPPER_ID] '$word'($count) -> reducer-$reducer_id"
+done
+
+echo "[Mapper-$MAPPER_ID] Terminé."

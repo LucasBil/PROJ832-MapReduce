@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MasterNode {
     public static int numMappers = 3;
@@ -291,9 +292,19 @@ public class MasterNode {
                 .filter(p -> !p.isEmpty())
                 .collect(Collectors.toList());
 
+        List<String> chunks = new ArrayList<>();
+        for (int i = 0; i < MasterNode.numMappers; i++) {
+            final int mapperIndex = i;
+            String chunk = IntStream.range(0, paragraphs.size())
+                    .filter(j -> j % MasterNode.numMappers == mapperIndex)
+                    .mapToObj(paragraphs::get)
+                    .collect(Collectors.joining(" "));
+            if (!chunk.isEmpty()) chunks.add(chunk);
+        }
+
         MapReduceTask task = new MapReduceTask(
                 "word-count-job-1",
-                paragraphs,
+                chunks,
                 MasterNode.numReducers
         );
 

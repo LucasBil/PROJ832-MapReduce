@@ -3,8 +3,8 @@ echo ==============================================
 echo MapReduce Visualizer
 echo ==============================================
 
-if not exist "target\classes\org\example\MasterNode.class" (
-    echo [0/3] Compiling Java MapReduce Engine...
+if not exist "target\dependency" (
+    echo [0/3] Compiling Java MapReduce Engine and fetching dependencies...
     call mvnw.cmd clean compile dependency:copy-dependencies
 )
 

@@ -116,9 +116,12 @@ function runJavaProcess(jobId) {
   let resultsMode = false;
   let finalResults = [];
 
+  let stdoutBuffer = '';
+
   javaProcess.stdout.on('data', (data) => {
-    const output = data.toString();
-    const lines = output.split('\n');
+    stdoutBuffer += data.toString();
+    const lines = stdoutBuffer.split('\n');
+    stdoutBuffer = lines.pop(); // Keep the last incomplete line for the next chunk
 
     for (let line of lines) {
       line = line.trim();

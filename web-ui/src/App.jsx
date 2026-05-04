@@ -58,6 +58,7 @@ export default function App() {
 
     evtSource.onmessage = (event) => {
       const log = JSON.parse(event.data);
+      console.log('SSE event:', log);
       setLogs((prev) => [...prev, log]);
 
       if (log.type === 'phase') {
@@ -106,7 +107,7 @@ export default function App() {
         {jobState === 'idle' && (
           <div className="glass rounded-3xl p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Upload Zone */}
-            <div 
+            <div
               className={clsx(
                 "border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300",
                 file ? "border-primary bg-primary/5" : "border-white/10 hover:border-primary/50 hover:bg-white/5"
@@ -114,12 +115,12 @@ export default function App() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
             >
-              <input 
-                type="file" 
-                id="file-upload" 
-                className="hidden" 
-                accept=".txt" 
-                onChange={(e) => setFile(e.target.files[0])} 
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                accept=".txt"
+                onChange={(e) => setFile(e.target.files[0])}
               />
               <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center space-y-4">
                 <div className={clsx("p-4 rounded-full", file ? "bg-primary/20 text-primary" : "bg-surface text-slate-400")}>
@@ -142,11 +143,11 @@ export default function App() {
                 <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-primary" /> Number of Mappers
                 </label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max="10" 
-                  value={mappers} 
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={mappers}
                   onChange={(e) => setMappers(parseInt(e.target.value) || 1)}
                   className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
@@ -155,18 +156,18 @@ export default function App() {
                 <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-secondary" /> Number of Reducers
                 </label>
-                <input 
-                  type="number" 
-                  min="1" 
-                  max="10" 
-                  value={reducers} 
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={reducers}
                   onChange={(e) => setReducers(parseInt(e.target.value) || 1)}
                   className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
                 />
               </div>
             </div>
 
-            <button 
+            <button
               onClick={handleRunJob}
               disabled={!file}
               className="w-full relative group overflow-hidden rounded-xl p-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -202,16 +203,16 @@ export default function App() {
 
             {/* Progress Visualization */}
             <div className="h-2 bg-surface rounded-full overflow-hidden">
-              <div 
+              <div
                 className={clsx(
                   "h-full transition-all duration-1000 ease-out",
                   jobState === 'error' ? 'bg-red-500 w-full' : 'bg-gradient-to-r from-primary to-secondary'
                 )}
-                style={{ 
-                  width: phase.includes('Map') ? '33%' : 
-                         phase.includes('Reduce') ? '66%' : 
-                         phase.includes('Collect') ? '90%' : 
-                         jobState === 'running' ? '10%' : '100%' 
+                style={{
+                  width: phase.includes('Map') ? '33%' :
+                    phase.includes('Reduce') ? '66%' :
+                      phase.includes('Collect') ? '90%' :
+                        jobState === 'running' ? '10%' : '100%'
                 }}
               />
             </div>
@@ -226,9 +227,9 @@ export default function App() {
                   <span className={clsx(
                     "whitespace-pre-wrap break-all",
                     log.type === 'error' || log.type === 'stderr' ? 'text-red-400' :
-                    log.type === 'phase' ? 'text-secondary font-bold' :
-                    log.type === 'success' ? 'text-accent' :
-                    'text-slate-300'
+                      log.type === 'phase' ? 'text-secondary font-bold' :
+                        log.type === 'success' ? 'text-accent' :
+                          'text-slate-300'
                   )}>
                     {log.message}
                   </span>
@@ -237,7 +238,7 @@ export default function App() {
             </div>
 
             {jobState === 'error' && (
-              <button 
+              <button
                 onClick={() => setJobState('idle')}
                 className="w-full bg-surface border border-white/10 hover:bg-white/5 text-white py-3 rounded-xl font-medium transition-colors"
               >
@@ -258,7 +259,7 @@ export default function App() {
               <p className="text-slate-400 max-w-md">
                 Your MapReduce job processed successfully across {mappers} mappers and {reducers} reducers.
               </p>
-              <button 
+              <button
                 onClick={() => setJobState('idle')}
                 className="mt-4 px-6 py-2 bg-surface border border-white/10 hover:bg-white/5 rounded-full text-sm font-medium transition-colors"
               >
@@ -272,7 +273,7 @@ export default function App() {
                 <BarChart3 className="w-6 h-6 text-primary" />
                 <h3 className="text-xl font-bold text-slate-200">Word Count Frequencies</h3>
               </div>
-              
+
               <div className="w-full overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '800px' }}>
                 {results.length > 0 ? (
                   <div style={{ height: Math.max(400, results.length * 35), width: '100%' }}>
@@ -285,7 +286,7 @@ export default function App() {
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={true} vertical={false} />
                         <XAxis type="number" stroke="rgba(255,255,255,0.4)" />
                         <YAxis dataKey="word" type="category" stroke="rgba(255,255,255,0.8)" width={100} tick={{ fontSize: 12 }} interval={0} />
-                        <Tooltip 
+                        <Tooltip
                           contentStyle={{ backgroundColor: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                           itemStyle={{ color: '#3B82F6' }}
                         />
@@ -293,8 +294,8 @@ export default function App() {
                         </Bar>
                         <defs>
                           <linearGradient id="colorUv" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.8} />
                           </linearGradient>
                         </defs>
                       </BarChart>

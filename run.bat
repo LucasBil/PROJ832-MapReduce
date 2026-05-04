@@ -4,9 +4,12 @@ echo MapReduce Visualizer
 echo ==============================================
 
 if not exist "target\dependency" (
-    echo [0/3] Compiling Java MapReduce Engine and fetching dependencies...
-    call mvnw.cmd clean compile dependency:copy-dependencies
+    echo [0/3] Fetching Maven dependencies...
+    call mvnw.cmd dependency:copy-dependencies
 )
+
+echo [0/3] Compiling Java MapReduce Engine...
+call mvnw.cmd compile
 
 if not exist "web-ui\node_modules" (
     echo [1/3] Installing Web Dependencies...

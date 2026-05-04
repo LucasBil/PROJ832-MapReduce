@@ -1,29 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+/* ─── Base ─────────────────────────────────────────────── */
 @layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
   body {
-    @apply bg-background text-slate-200 font-sans antialiased overflow-x-hidden;
+    @apply bg-background text-primary font-pixel antialiased overflow-x-hidden;
+    image-rendering: pixelated;
   }
+
+  h1, h2, h3, h4, h5, h6 { @apply font-pixel; }
 }
 
+/* ─── Utilities ─────────────────────────────────────────── */
 @layer utilities {
-  .glass {
-    @apply bg-surface/40 backdrop-blur-md border border-white/10 shadow-xl;
-  }
-}
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  /* Chunky pixel border (simulates old LCD border) */
+  .pixel-box {
+    background: theme('colors.panel');
+    border: 4px solid theme('colors.primary');
+    box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #000;
+    image-rendering: pixelated;
+  }
+
+  .pixel-box-pink {
+    background: theme('colors.panel');
+    border: 4px solid theme('colors.secondary');
+    box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #000;
+  }
+
+  .pixel-box-gold {
+    background: theme('colors.panel');
+    border: 4px solid theme('colors.accent');
+    box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #000;
+  }
+
+  .pixel-box-red {
+    background: theme('colors.panel');
+    border: 4px solid theme('colors.danger');
+    box-shadow: 4px 4px 0 #000, inset 0 0 0 2px #000;
+  }
+
+  /* Pixelated button */
+  .btn-pixel {
+    @apply font-pixel text-xs px-4 py-3 cursor-pointer select-none;
+    background: theme('colors.primary');
+    color: #000;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    transition: transform 0.05s, box-shadow 0.05s;
+    image-rendering: pixelated;
+  }
+  .btn-pixel:hover:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000;
+  }
+  .btn-pixel:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+  .btn-pixel:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .btn-pixel-pink {
+    @apply font-pixel text-xs px-4 py-3 cursor-pointer select-none;
+    background: theme('colors.secondary');
+    color: #fff;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    transition: transform 0.05s, box-shadow 0.05s;
+    image-rendering: pixelated;
+  }
+  .btn-pixel-pink:hover:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000;
+  }
+  .btn-pixel-pink:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+  .btn-pixel-pink:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-pixel-gold {
+    @apply font-pixel text-xs px-4 py-3 cursor-pointer select-none;
+    background: theme('colors.accent');
+    color: #000;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    transition: transform 0.05s, box-shadow 0.05s;
+    image-rendering: pixelated;
+  }
+  .btn-pixel-gold:hover:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #000;
+  }
+  .btn-pixel-gold:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+  .btn-pixel-gold:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Pixel input */
+  .input-pixel {
+    @apply font-pixel text-xs px-3 py-2 w-full;
+    background: theme('colors.dark');
+    color: theme('colors.primary');
+    border: 3px solid theme('colors.primary');
+    box-shadow: inset 2px 2px 0 #000;
+    outline: none;
+  }
+  .input-pixel:focus {
+    border-color: theme('colors.accent');
+    box-shadow: inset 2px 2px 0 #000, 0 0 0 2px theme('colors.accent');
+  }
+
+  /* CRT scanline overlay */
+  .crt::after {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.07) 0px,
+      rgba(0, 0, 0, 0.07) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    z-index: 9999;
+  }
+
+  /* Animated scanline beam */
+  .scanline-beam {
+    position: fixed;
+    left: 0; right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, transparent, rgba(0,255,65,0.04), transparent);
+    animation: scanline 5s linear infinite;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* Blinking cursor */
+  .cursor::after {
+    content: '_';
+    animation: blink 1s step-end infinite;
+  }
+
+  /* Pixel scrollbar */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #000; }
+  ::-webkit-scrollbar-thumb {
+    background: theme('colors.primary');
+    border: 2px solid #000;
+  }
+
+  /* Pixel progress bar */
+  .progress-pixel {
+    height: 20px;
+    background: #000;
+    border: 3px solid theme('colors.primary');
+    box-shadow: 4px 4px 0 #000;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-pixel-fill {
+    height: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      theme('colors.primary') 0px,
+      theme('colors.primary') 12px,
+      #004d14 12px,
+      #004d14 16px
+    );
+    transition: width 0.8s steps(8, end);
+    box-shadow: 0 0 10px theme('colors.primary');
+  }
+  .progress-pixel-fill-red {
+    height: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      theme('colors.danger') 0px,
+      theme('colors.danger') 12px,
+      #4d0000 12px,
+      #4d0000 16px
+    );
+    width: 100%;
+    box-shadow: 0 0 10px theme('colors.danger');
+  }
+
+  /* Ticker tape */
+  .ticker-wrap {
+    overflow: hidden;
+    border-top: 2px solid theme('colors.primary');
+    border-bottom: 2px solid theme('colors.primary');
+    background: #000;
+    padding: 4px 0;
+  }
+  .ticker-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 18s linear infinite;
+    color: theme('colors.primary');
+    font-size: 10px;
+  }
+
+  /* Glow text */
+  .text-glow-green { text-shadow: 0 0 8px #00FF41, 0 0 20px #00FF41; }
+  .text-glow-pink  { text-shadow: 0 0 8px #FF00FF, 0 0 20px #FF00FF; }
+  .text-glow-gold  { text-shadow: 0 0 8px #FFD700, 0 0 20px #FFD700; }
+  .text-glow-cyan  { text-shadow: 0 0 8px #00CFFF, 0 0 20px #00CFFF; }
 }

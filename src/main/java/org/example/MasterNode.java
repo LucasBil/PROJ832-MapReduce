@@ -8,9 +8,12 @@ import com.github.dockerjava.core.*;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
 
 public class MasterNode {
     public static int numMappers = 3;
@@ -104,15 +107,33 @@ public class MasterNode {
         System.out.println("\n--- Phase MAP ---");
         List<String> chunks = task.getChunks();
         int nbReducers = task.getNbReducers();
-        List<Thread> threads = new ArrayList<>();
 
+        // Write all chunks in parallel first
+        List<CompletableFuture<Void>> writes = new ArrayList<>();
+        for (int i = 0; i < chunks.size(); i++) {
+            final int idx = i;
+            final String normalized = chunks.get(i).toLowerCase(Locale.ROOT);
+            writes.add(CompletableFuture.runAsync(() -> {
+                try {
+                    Files.writeString(
+                            Paths.get(HOST_SHARED_DIR, "input-" + idx + ".txt"),
+                            normalized,
+                            StandardCharsets.UTF_8
+                    );
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }));
+        }
+        CompletableFuture.allOf(writes.toArray(new CompletableFuture[0])).get();
+
+        // Then spawn all containers in parallel
+        List<Thread> threads = new ArrayList<>();
         for (int i = 0; i < chunks.size(); i++) {
             final int mapperIndex = i;
-            final String chunk = chunks.get(i);
-
             Thread t = new Thread(() -> {
                 try {
-                    String containerId = spawnMapper(mapperIndex, nbReducers, chunk);
+                    String containerId = spawnMapper(mapperIndex, nbReducers);
                     waitForContainer(containerId);
                     System.out.println("[Mapper-" + mapperIndex + "] conteneur terminé.");
                 } catch (Exception e) {
@@ -122,26 +143,16 @@ public class MasterNode {
             threads.add(t);
             t.start();
         }
-
-        for (Thread t : threads) t.join(); // attendre tous les mappers
+        for (Thread t : threads) t.join();
         System.out.println("--- Tous les Mappers ont terminé ---");
     }
 
-    private String spawnMapper(int index, int nbReducers, String chunk) {
-        // Lowercase in Java (Unicode-aware) before writing to disk, so Alpine shell tools only deal with plain lowercase text
-        String normalizedChunk = chunk.toLowerCase(java.util.Locale.ROOT);
-        try {
-            Files.writeString(Paths.get(HOST_SHARED_DIR, "input-" + index + ".txt"), normalizedChunk, java.nio.charset.StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // La commande exécute le script mapper.sh avec le chemin du fichier en argument
+    // spawnMapper no longer writes — just creates the container
+    private String spawnMapper(int index, int nbReducers) {
         String cmd = String.format(
                 "sh /shared/mapper.sh %d %d /shared/input-%d.txt",
                 index, nbReducers, index
         );
-
         Bind volumeBind = new Bind(
                 HOST_SHARED_DIR,
                 new Volume(CONTAINER_SHARED_DIR)
@@ -225,23 +236,39 @@ public class MasterNode {
     // Collecte des résultats
     // -------------------------------------------------------------------------
 
-    private Map<String, Integer> collectResults(int nbReducers) throws IOException {
+    private Map<String, Integer> collectResults(int nbReducers) throws Exception {
         System.out.println("\n--- Collecte des résultats ---");
-        Map<String, Integer> finalResult = new TreeMap<>();
+
+        List<CompletableFuture<Map<String, Integer>>> futures = new ArrayList<>();
 
         for (int i = 0; i < nbReducers; i++) {
-            Path resultFile = Paths.get(HOST_SHARED_DIR, "result-" + i + ".txt");
-            if (!Files.exists(resultFile)) {
-                System.out.println("[Reducer-" + i + "] aucun fichier résultat.");
-                continue;
-            }
-            List<String> lines = Files.readAllLines(resultFile, java.nio.charset.StandardCharsets.UTF_8);
-            for (String line : lines) {
-                String[] parts = line.trim().split("\\s+");
-                if (parts.length == 2) {
-                    finalResult.merge(parts[0], Integer.parseInt(parts[1]), Integer::sum);
+            final int idx = i;
+            futures.add(CompletableFuture.supplyAsync(() -> {
+                Map<String, Integer> partial = new HashMap<>();
+                Path resultFile = Paths.get(HOST_SHARED_DIR, "result-" + idx + ".txt");
+                if (!Files.exists(resultFile)) {
+                    System.out.println("[Reducer-" + idx + "] aucun fichier résultat.");
+                    return partial;
                 }
-            }
+                try {
+                    List<String> lines = Files.readAllLines(resultFile, StandardCharsets.UTF_8);
+                    for (String line : lines) {
+                        String[] parts = line.trim().split("\\s+");
+                        if (parts.length == 2) {
+                            partial.merge(parts[0], Integer.parseInt(parts[1]), Integer::sum);
+                        }
+                    }
+                } catch (IOException e) {
+                    System.err.println("[Reducer-" + idx + "] Erreur lecture : " + e.getMessage());
+                }
+                return partial;
+            }));
+        }
+
+        // Merge all partial maps into one
+        Map<String, Integer> finalResult = new TreeMap<>();
+        for (CompletableFuture<Map<String, Integer>> future : futures) {
+            future.get().forEach((k, v) -> finalResult.merge(k, v, Integer::sum));
         }
         return finalResult;
     }

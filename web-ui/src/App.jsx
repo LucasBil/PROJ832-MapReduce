@@ -94,15 +94,9 @@ export default function App() {
       <div className="max-w-4xl w-full space-y-8 z-10 relative">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center p-3 bg-surface/50 rounded-2xl border border-white/5 mb-2 shadow-lg backdrop-blur-sm">
-            <Server className="w-8 h-8 text-primary" />
-          </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-            MapReduce Visualizer
+            MapReduce - Word Count
           </h1>
-          <p className="text-slate-400 max-w-xl mx-auto text-lg">
-            A dynamic, high-performance web interface for orchestrating your Docker-based Java MapReduce cluster.
-          </p>
         </div>
 
         {jobState === 'idle' && (
@@ -264,7 +258,7 @@ export default function App() {
                 onClick={() => setJobState('idle')}
                 className="mt-4 px-6 py-2 bg-surface border border-white/10 hover:bg-white/5 rounded-full text-sm font-medium transition-colors"
               >
-                Run Another Job
+                Lancer une autre analyse
               </button>
             </div>
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, Play, CheckCircle2, Server, Hash, FileText, AlertCircle, BarChart3, Loader2 } from 'lucide-react';
+import { Upload, Play, CheckCircle2, Server, Hash, FileText, AlertCircle, BarChart3, Loader2, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function clsx(...classes) {
@@ -8,13 +8,14 @@ function clsx(...classes) {
 
 export default function App() {
   const [file, setFile] = useState(null);
-  const [mappers, setMappers] = useState(3);
-  const [reducers, setReducers] = useState(1);
+  const [mappers, setMappers] = useState(6);
+  const [reducers, setReducers] = useState(2);
   const [jobId, setJobId] = useState(null);
   const [jobState, setJobState] = useState('idle'); // idle, running, success, error
   const [logs, setLogs] = useState([]);
   const [phase, setPhase] = useState('');
   const [results, setResults] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -58,7 +59,7 @@ export default function App() {
 
     evtSource.onmessage = (event) => {
       const log = JSON.parse(event.data);
-      console.log('SSE event:', log);
+      //console.log('SSE event:', log);
       setLogs((prev) => [...prev, log]);
 
       if (log.type === 'phase') {
@@ -141,12 +142,12 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                  <Hash className="w-4 h-4 text-primary" /> Number of Mappers
+                  <Hash className="w-4 h-4 text-primary" /> Nombre de Mappers
                 </label>
                 <input
                   type="number"
                   min="1"
-                  max="10"
+                  max="20"
                   value={mappers}
                   onChange={(e) => setMappers(parseInt(e.target.value) || 1)}
                   className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
@@ -154,12 +155,12 @@ export default function App() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                  <Hash className="w-4 h-4 text-secondary" /> Number of Reducers
+                  <Hash className="w-4 h-4 text-secondary" /> Nombre de Reducers
                 </label>
                 <input
                   type="number"
                   min="1"
-                  max="10"
+                  max="20"
                   value={reducers}
                   onChange={(e) => setReducers(parseInt(e.target.value) || 1)}
                   className="w-full bg-background border border-white/10 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all"
@@ -255,9 +256,9 @@ export default function App() {
               <div className="w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center text-accent mb-2">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
-              <h2 className="text-3xl font-bold text-slate-200">Analysis Complete</h2>
+              <h2 className="text-3xl font-bold text-slate-200">Analyse terminée</h2>
               <p className="text-slate-400 max-w-md">
-                Your MapReduce job processed successfully across {mappers} mappers and {reducers} reducers.
+                Votre job MapReduce a été traité avec succès par {mappers} mappers et {reducers} reducers.
               </p>
               <button
                 onClick={() => setJobState('idle')}
@@ -269,43 +270,67 @@ export default function App() {
 
             {/* Results Visualization */}
             <div className="glass rounded-3xl p-8 space-y-6">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="w-6 h-6 text-primary" />
-                <h3 className="text-xl font-bold text-slate-200">Word Count Frequencies</h3>
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-6 h-6 text-primary" />
+                  <h3 className="text-xl font-bold text-slate-200">Word Count Frequencies</h3>
+                </div>
+                {/* Search bar */}
+                <div className="relative flex items-center gap-2">
+                  <Search className="absolute left-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <input
+                    id="word-search"
+                    type="text"
+                    placeholder="Rechercher un mot..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-background border border-white/10 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all w-52"
+                  />
+                  {searchQuery && (
+                    <span className="text-xs text-slate-400 whitespace-nowrap">
+                      {results.filter(r => r.word.includes(searchQuery.toLowerCase())).length} match(es)
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="w-full overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '800px' }}>
-                {results.length > 0 ? (
-                  <div style={{ height: Math.max(400, results.length * 35), width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={results} // Show all words
-                        layout="vertical"
-                        margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={true} vertical={false} />
-                        <XAxis type="number" stroke="rgba(255,255,255,0.4)" />
-                        <YAxis dataKey="word" type="category" stroke="rgba(255,255,255,0.8)" width={100} tick={{ fontSize: 12 }} interval={0} />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                          itemStyle={{ color: '#3B82F6' }}
-                        />
-                        <Bar dataKey="count" fill="url(#colorUv)" radius={[0, 4, 4, 0]} barSize={20}>
-                        </Bar>
-                        <defs>
-                          <linearGradient id="colorUv" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.8} />
-                          </linearGradient>
-                        </defs>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-slate-500">
-                    No results found
-                  </div>
-                )}
+                {(() => {
+                  const filtered = searchQuery
+                    ? results.filter(r => r.word.includes(searchQuery.toLowerCase()))
+                    : results;
+                  return filtered.length > 0 ? (
+                    <div style={{ height: Math.max(400, filtered.length * 35), width: '100%' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={filtered}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={true} vertical={false} />
+                          <XAxis type="number" stroke="rgba(255,255,255,0.4)" />
+                          <YAxis dataKey="word" type="category" stroke="rgba(255,255,255,0.8)" width={100} tick={{ fontSize: 12 }} interval={0} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                            itemStyle={{ color: '#3B82F6' }}
+                          />
+                          <Bar dataKey="count" fill="url(#colorUv)" radius={[0, 4, 4, 0]} barSize={20}>
+                          </Bar>
+                          <defs>
+                            <linearGradient id="colorUv" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8} />
+                              <stop offset="95%" stopColor="#8B5CF6" stopOpacity={0.8} />
+                            </linearGradient>
+                          </defs>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-40 flex items-center justify-center text-slate-500">
+                      {searchQuery ? `Aucune correspondance pour "${searchQuery}"` : 'Aucun résultat'}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
